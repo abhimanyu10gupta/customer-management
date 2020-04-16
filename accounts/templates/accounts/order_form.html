@@ -9,7 +9,11 @@
             <div class="card card-body">
     <form action="" method="POST">
         {% csrf_token %}
-        {{form}}
+        {{ formSet.management_form }}
+        {% for form in formSet %}
+            {{ form }}
+            <hr>
+        {% endfor %}
         <input type="submit" name ="submit">
     </form>
             </div>
