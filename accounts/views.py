@@ -23,6 +23,9 @@ def registerPage(request):
             username = form.cleaned_data.get('username')
             group = Group.objects.get(name='Customer')
             user.groups.add(group)
+            Customer.objects.create(
+                user=user
+            )
             messages.success(request, 'Account was created for: ' + username)
             return redirect('login')
     context ={'form':form, 'messages':messages}
@@ -48,9 +51,21 @@ def logoutUser(request):
     logout(request)
     return redirect('login')
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles='Customers')
 def userPage(request):
+    orders = request.user.customer.order_set.all()
+    total_orders = orders.count()
+    delivered = orders.filter(status='Delivered').count()
+    pending = orders.filter(status='pending').count()
     context = {
+        'orders':orders,
+        'total_orders': total_orders,
+        'delivered': delivered,
+        'pending': pending,
     }
+
+    print(orders)
 
     return render(request, 'accounts/user.html', context)
 
@@ -72,14 +87,14 @@ def home(request):
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['Admin'])
 def product(request):
     products = Product.objects.all()
     return render(request, 'accounts/products.html', {'products':products})
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['Admin'])
 def customers(request, pk):
     customer = Customer.objects.get(id=pk)
     orders = customer.order_set.all()
@@ -98,7 +113,7 @@ def customers(request, pk):
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['Admin'])
 def createOrder(request, pk):
     OrderFormSet = inlineformset_factory(Customer, Order, fields=('product', 'status'), extra=10)
     customer = Customer.objects.get(id=pk)
@@ -115,7 +130,7 @@ def createOrder(request, pk):
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['Admin'])
 def updateOrder(request,pk):
 
     order = Order.objects.get(id=pk)
@@ -131,7 +146,7 @@ def updateOrder(request,pk):
 
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles=['admin'])
+@allowed_users(allowed_roles=['Admin'])
 def deleteOrder(request, pk):
     order = Order.objects.get(id=pk)
     if request.method =='POST':
