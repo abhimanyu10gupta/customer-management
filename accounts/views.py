@@ -52,7 +52,7 @@ def logoutUser(request):
     return redirect('login')
 
 @login_required(login_url='login')
-@allowed_users(allowed_roles='Customers')
+@allowed_users(allowed_roles=['Customer'])
 def userPage(request):
     orders = request.user.customer.order_set.all()
     total_orders = orders.count()
@@ -69,6 +69,18 @@ def userPage(request):
 
     return render(request, 'accounts/user.html', context)
 
+@login_required(login_url='login')
+@allowed_users(allowed_roles=['Customer'])
+def accountSettings(request):
+    customer = request.user.customer
+    form = CustomerForm(instance=customer)
+    context = {'form':form}
+
+    if request.method == 'POST':
+        form = CustomerForm(request.POST, request.FILES, instance=customer)
+        if form.is_valid():
+            form.save()
+    return render(request, 'accounts/account_settings.html', context)
 
 @login_required(login_url='login')
 @admin_only
